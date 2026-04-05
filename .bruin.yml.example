@@ -1,0 +1,9 @@
+default_environment: default
+environments:
+  default:
+    connections:
+      google_cloud_platform:
+        - name: gcp
+          project_id: <GCP_PROJECT_ID>
+          location: US
+          use_application_default_credentials: true
