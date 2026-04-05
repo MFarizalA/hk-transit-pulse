@@ -1,6 +1,8 @@
 .bruin.yml
 .env
 terraform/terraform.tfvars
+terraform/.terraform/
+terraform/.terraform.lock.hcl
 DOCS/CLAUDE.md
 logs/runs
 logs/*.log
