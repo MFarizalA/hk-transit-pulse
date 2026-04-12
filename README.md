@@ -1,22 +1,22 @@
-# Hong Kong Transit Pulse — Data Engineering Pipeline
+# Hong Kong Transit Pulse — 香港交通脈搏
 
 An end-to-end data engineering pipeline for Hong Kong public transport data, built with **Bruin** as the core orchestration and transformation engine.
 
-> Data Engineering Zoomcamp 2026 — sponsored by Bruin
-
-> **Note:** This project is built for the Data Engineering Zoomcamp 2026
+> **Data Engineering Zoomcamp 2026 — Capstone Project** · Deadline: April 21, 2026
 
 ---
 
 ## Problem Statement
 
-Hong Kong has one of the most complex public transport networks in Southeast Asia — Franchised buses (KMB, Citybus), MTR, Light Rail, and ferries — yet the data behind it is scattered, raw, and unprocessed. Without a proper data pipeline, it's impossible to derive analytical insights like ridership trends, peak hour patterns, route performance, and service reliability.
+Hong Kong runs one of the world's most complex public transport networks — MTR heavy rail, Light Rail, over 700 bus routes, trams, and ferries — yet the data describing how these systems actually perform sits scattered across multiple government portals in raw GTFS files and CSV exports that are difficult for the public to interpret.
 
----
+This project builds a structured batch pipeline to answer:
 
-## Core Idea
-
-Hong Kong Transit Pulse is an end-to-end batch (or Realtime if i have time) data engineering pipeline that ingests raw GTFS feeds and open data, transforms it into analytics-ready models, and surfaces insights via a BI dashboard.
+- Which stops and routes are most heavily used?
+- How does service differ between weekdays and weekends?
+- Which areas are underserved by public transport?
+- When do first and last services run on each route?
+- How do MTR and bus networks complement each other geographically?
 
 ---
 
@@ -24,33 +24,36 @@ Hong Kong Transit Pulse is an end-to-end batch (or Realtime if i have time) data
 
 ```mermaid
 flowchart TD
-    A["HK Transport GTFS Static\n(ZIP - Routes, Stops, Schedules)"] --> C
-    B["Hong Kong Open Data\n(CSV / API)"] --> C
+    A["HK Transport GTFS Static\n(data.gov.hk)"] --> C
+    B["MTR Open Data\n(opendata.mtr.com.hk)"] --> C
 
     C["Bruin Ingestion Assets\n(Python)"] --> D
 
     D["Data Lake\nGoogle Cloud Storage\nRaw Zone"]
 
-    D --> E["Bruin Pipeline Orchestration\n(Scheduled Runs)"]
+    D --> E["Bruin Pipeline Orchestration\n(Daily Schedule)"]
 
     E --> F["Bruin SQL Assets\nStaging Layer\n(Clean + Typed)"]
     F --> G["Bruin SQL Assets\nMart Layer\n(Aggregated Models)"]
 
     G --> H["Data Warehouse\nBigQuery"]
 
-    H --> I["Bruin AI Data Analyst\n(Analysis + Insights)"]
-    H --> J["Dashboard\nLooker Studio"]
+    H --> I["Streamlit Dashboard\n(dashboard/app.py)"]
 ```
+
+---
 
 ## Stack
 
-| Tool | Purpose |
+| Layer | Tool |
 |---|---|
-| Bruin | Pipeline orchestration + SQL transformations |
-| GCS | Raw data storage |
-| BigQuery | Data warehouse |
-| OpenTofu | Infrastructure provisioning |
-| Looker Studio | Visualization |
+| Orchestration | Bruin |
+| Infrastructure | OpenTofu |
+| Data Lake | Google Cloud Storage |
+| Data Warehouse | BigQuery |
+| Streaming | Confluent Kafka |
+| Visualization | Streamlit + pydeck |
+| Cloud | GCP (Free Tier) |
 
 ---
 
@@ -58,23 +61,38 @@ flowchart TD
 
 ```
 hk-transit-pulse/
-├── .bruin.yml                          # Bruin project config + GCP connection
-├── pipeline.yml                        # Pipeline definition + schedule
+├── .bruin.yml                          # Bruin project config + GCP connection (gitignored)
+├── pipeline.yml                        # Pipeline definition + daily schedule
 ├── requirements.txt                    # Python dependencies
 ├── assets/
 │   ├── ingestion/
-│   │   └── ingest_gtfs_static.py       # Download GTFS ZIP -> upload GCS -> load BQ
+│   │   ├── ingest_gtfs_static.py       # Download GTFS ZIP -> GCS -> BigQuery
+│   │   └── ingest_mtr_csv.py           # Fetch MTR CSVs -> GCS -> BigQuery
 │   ├── staging/
 │   │   ├── stg_stops.sql
 │   │   ├── stg_routes.sql
 │   │   ├── stg_trips.sql
-│   │   └── stg_stop_times.sql
+│   │   ├── stg_stop_times.sql
+│   │   └── stg_calendar.sql
 │   └── marts/
-│       ├── trips_per_route.sql
-│       ├── stops_ranked.sql
-│       └── peak_hour_analysis.sql
+│       ├── mart_stops_ranked.sql
+│       ├── mart_trips_per_route.sql
+│       ├── mart_peak_hour_analysis.sql
+│       ├── mart_route_service_hours.sql
+│       ├── mart_service_frequency.sql
+│       ├── mart_transfer_hubs.sql
+│       ├── mart_weekday_vs_weekend.sql
+│       ├── mart_longest_routes.sql
+│       ├── mart_early_night_routes.sql
+│       └── mart_trip_trajectories.sql
+├── dashboard/
+│   └── app.py                          # Streamlit dashboard
+├── streaming/
+│   ├── config.py
+│   ├── producer.py
+│   └── consumer.py
 └── terraform/
-    ├── main.tf                         # GCS + BigQuery datasets + service account + IAM
+    ├── main.tf                         # GCS + BigQuery + service account + IAM
     ├── variables.tf
     ├── outputs.tf
     └── terraform.tfvars.example
@@ -87,21 +105,60 @@ hk-transit-pulse/
 ```
 <GCP_PROJECT_ID>/
 ├── raw/
-│   ├── gtfs_stops
 │   ├── gtfs_routes
+│   ├── gtfs_stops
 │   ├── gtfs_trips
 │   ├── gtfs_stop_times
-│   └── gtfs_calendar
+│   ├── gtfs_calendar
+│   ├── mtr_lines_stations
+│   ├── mtr_bus_stops
+│   ├── mtr_fares
+│   └── mtr_light_rail_stops
 ├── staging/
 │   ├── stg_stops
 │   ├── stg_routes
 │   ├── stg_trips
-│   └── stg_stop_times
+│   ├── stg_stop_times
+│   └── stg_calendar
 └── marts/
-    ├── trips_per_route
-    ├── stops_ranked
-    └── peak_hour_analysis
+    ├── mart_stops_ranked
+    ├── mart_trips_per_route
+    ├── mart_peak_hour_analysis
+    ├── mart_route_service_hours
+    ├── mart_service_frequency
+    ├── mart_transfer_hubs
+    ├── mart_weekday_vs_weekend
+    ├── mart_longest_routes
+    ├── mart_early_night_routes
+    └── mart_trip_trajectories
 ```
+
+All datasets are in the **US** region.
+
+---
+
+## Data Sources
+
+**GTFS Static Feed** — `https://static.data.gov.hk/td/pt-headway-en/gtfs.zip`
+
+| File | Contents |
+|---|---|
+| routes.txt | Bus/tram/ferry routes |
+| stops.txt | Stop locations + coordinates |
+| trips.txt | Individual trips per route |
+| stop_times.txt | Arrivals/departures per stop |
+| calendar.txt | Weekday vs weekend service days |
+
+> Note: MTR does not publish GTFS — trip-level data is not publicly available.
+
+**MTR Open Data** — `https://opendata.mtr.com.hk`
+
+| Table | Contents |
+|---|---|
+| mtr_lines_stations | Heavy rail lines and stations |
+| mtr_bus_stops | MTR feeder bus stops and routes |
+| mtr_fares | Station-to-station fare table |
+| mtr_light_rail_stops | Light Rail routes and stops |
 
 ---
 
@@ -129,8 +186,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/application_default_crede
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
 # Fill in your project_id in terraform.tfvars
-tofu init
-tofu apply
+tofu init && tofu apply
 ```
 
 ### 3. Configure Bruin
@@ -166,20 +222,19 @@ bruin run
 
 # Run individual layers
 bruin run assets/ingestion/ingest_gtfs_static.py
+bruin run assets/ingestion/ingest_mtr_csv.py
 bruin run assets/staging/stg_stops.sql
-bruin run assets/marts/trips_per_route.sql
+bruin run assets/marts/mart_stops_ranked.sql
+```
+
+### 6. Run the Dashboard
+
+```bash
+streamlit run dashboard/app.py
 ```
 
 ---
 
-## Data Source
+## About
 
-**HK Transport GTFS Static** — https://static.data.gov.hk/td/pt-headway-en/gtfs.zip
-
-| File | Contents |
-|---|---|
-| routes.txt | Bus routes |
-| stops.txt | Bus stops + coordinates |
-| trips.txt | Individual trips per route |
-| stop_times.txt | Arrivals/departures per stop |
-| calendar.txt | Service days |
+Built by **Rizal**, an Indonesian data engineer based in Jakarta with a keen interest in urban mobility, open government data, and Hong Kong cinema.

@@ -1,5 +1,5 @@
 /* @bruin
-name: marts.stops_ranked
+name: marts.mart_stops_ranked
 type: bq.sql
 materialization:
   type: table

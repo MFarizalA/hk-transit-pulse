@@ -1,5 +1,5 @@
 /* @bruin
-name: marts.peak_hour_analysis
+name: marts.mart_peak_hour_analysis
 type: bq.sql
 materialization:
   type: table

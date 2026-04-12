@@ -8,3 +8,5 @@ logs/runs
 logs/*.log
 __pycache__/
 *.py[cod]
+*.zip
+*.json

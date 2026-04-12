@@ -1,5 +1,5 @@
 /* @bruin
-name: marts.trips_per_route
+name: marts.mart_trips_per_route
 type: bq.sql
 materialization:
   type: table
