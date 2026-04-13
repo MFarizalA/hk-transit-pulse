@@ -34,7 +34,7 @@ def get_mtr_schedule(line, station, _refresh=0):
 PROJECT_ID = "project-e5d4de8a-49cc-439d-b6e"
 
 st.set_page_config(
-    page_title="香港交通脈搏 Hong Kong Transit Pulse",
+    page_title="🇭🇰 香港交通脈搏 Hong Kong Transit Pulse",
     page_icon="🚌",
     layout="wide"
 )
@@ -61,7 +61,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("香港交通脈搏 Hong Kong Transit Pulse")
+st.title("🇭🇰 香港交通脈搏 Hong Kong Transit Pulse")
 st.markdown("Hong Kong public transport network — routes, stops, and peak hours.")
 
 @st.cache_data(ttl=3600)
@@ -905,7 +905,7 @@ with tab_about:
     st.markdown("""
     <div style='text-align:center; padding:30px 0 10px 0;'>
         <span style='font-size:60px;'>🚌</span>
-        <h1 style='color:#C8102E; margin:0;'>香港交通脈搏 Hong Kong Transit Pulse</h1>
+        <h1 style='color:#C8102E; margin:0;'>🇭🇰 香港交通脈搏 Hong Kong Transit Pulse</h1>
         <p style='color:#666; font-size:18px;'>End-to-end batch data engineering pipeline for Hong Kong public transport</p>
         <p style='margin-top:10px;'>
             <span style='background:#C8102E; color:white; padding:4px 14px; border-radius:20px; font-size:15px; font-weight:600;'>

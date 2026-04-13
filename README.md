@@ -1,4 +1,4 @@
-# Hong Kong Transit Pulse — 香港交通脈搏
+# <img src="https://flagcdn.com/w40/hk.png" height="28"/> Hong Kong Transit Pulse — 香港交通脈搏
 
 ![GCP](https://img.shields.io/badge/Cloud-Google_Cloud_Platform-4285F4?style=flat-square&logo=googlecloud&logoColor=white)
 ![BigQuery](https://img.shields.io/badge/Warehouse-BigQuery-4285F4?style=flat-square&logo=googlebigquery&logoColor=white)
