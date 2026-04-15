@@ -14,6 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY bruin/ .
 
 # Bruin requires a git repo
-RUN git init && git add -A && git commit -m "init" --allow-empty
+RUN git config --global user.email "ci@hk-transit-pulse.local" && \
+    git config --global user.name "CI" && \
+    git init && git add -A && git commit -m "init" --allow-empty
 
 CMD ["bruin", "run", "."]
