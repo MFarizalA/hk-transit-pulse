@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY bruin/ .
 
+# Create .bruin.yml — no secrets, uses Cloud Run's application default credentials
+RUN printf 'default_environment: default\nenvironments:\n  default:\n    connections:\n      google_cloud_platform:\n        - name: gcp\n          project_id: project-e5d4de8a-49cc-439d-b6e\n          location: US\n          use_application_default_credentials: true\n' > .bruin.yml
+
 # Bruin requires a git repo
 RUN git config --global user.email "ci@hk-transit-pulse.local" && \
     git config --global user.name "CI" && \
