@@ -95,19 +95,7 @@ def format_gtfs_time(t):
     return f"{h:02d}:{m:02d}"
 
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
-# ── HK Time ───────────────────────────────────────────────────────────────────
 hk_tz = pytz.timezone("Asia/Hong_Kong")
-with st.sidebar:
-    hk_now = datetime.now(hk_tz)
-    st.markdown(f"""
-    <div style='text-align:center; padding:10px; background:#C8102E; border-radius:8px; margin:0;'>
-        <div style='color:white; font-size:12px; opacity:0.8;'>🕐 Hong Kong Time</div>
-        <div style='color:white; font-size:22px; font-weight:bold; font-family:monospace;'>{hk_now.strftime('%H:%M:%S')}</div>
-        <div style='color:white; font-size:11px; opacity:0.8;'>{hk_now.strftime('%A, %d %b %Y')}</div>
-        <div style='color:#ffcccc; font-size:10px;'>UTC+8</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 
 visible_types = [0, 3, 4, 7]
