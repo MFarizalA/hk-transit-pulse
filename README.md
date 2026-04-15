@@ -4,7 +4,7 @@
 ![BigQuery](https://img.shields.io/badge/Warehouse-BigQuery-4285F4?style=flat-square&logo=googlebigquery&logoColor=white)
 ![GCS](https://img.shields.io/badge/Lake-Cloud_Storage-4285F4?style=flat-square&logo=googlecloud&logoColor=white)
 ![Bruin](https://img.shields.io/badge/Orchestration-Bruin-F97316?style=flat-square&logoColor=white)
-![Redpanda](https://img.shields.io/badge/Streaming-Redpanda-E52B50?style=flat-square&logo=apachekafka&logoColor=white)
+![Redpanda](https://img.shields.io/badge/Streaming-Redpanda-E52B50?style=flat-square&logo=redpanda&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 ![CloudRun](https://img.shields.io/badge/Deploy-Cloud_Run-4285F4?style=flat-square&logo=googlecloud&logoColor=white)
 ![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
@@ -55,7 +55,17 @@ The pipeline runs daily, pulling from two open data sources — HK Transport (GT
 
 ## Tech Stack
 
-<img height="32" width="32" src="https://cdn.simpleicons.org/googlecloud" title="GCP"/> <img height="32" width="32" src="https://cdn.simpleicons.org/googlecloudstorage" title="GCS"/> <img height="32" width="32" src="https://cdn.simpleicons.org/googlebigquery" title="BigQuery"/> <img height="32" width="32" src="https://cdn.simpleicons.org/apachekafka" title="Redpanda"/> <img height="32" width="32" src="https://cdn.simpleicons.org/streamlit" title="Streamlit"/> <img height="32" width="32" src="https://cdn.simpleicons.org/docker" title="Docker"/> <img height="32" width="32" src="https://cdn.simpleicons.org/githubactions" title="GitHub Actions"/> <img height="32" width="32" src="https://cdn.simpleicons.org/terraform" title="OpenTofu"/> <img height="32" width="32" src="https://cdn.simpleicons.org/python" title="Python"/>
+<p>
+<img height="32" width="32" src="https://cdn.simpleicons.org/googlecloud" title="GCP"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/googlecloudstorage" title="GCS"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/googlebigquery" title="BigQuery"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/redpanda" title="Redpanda"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/streamlit" title="Streamlit"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/docker" title="Docker"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/githubactions" title="GitHub Actions"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/terraform" title="OpenTofu"/>
+<img height="32" width="32" src="https://cdn.simpleicons.org/python" title="Python"/>
+</p>
 
 | Layer | Tool | Purpose |
 |---|---|---|
