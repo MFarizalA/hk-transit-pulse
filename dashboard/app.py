@@ -38,6 +38,11 @@ st.set_page_config(
     layout="wide"
 )
 
+# Force a rerun after session initializes to prevent pydeck SessionInfo error
+if "session_ready" not in st.session_state:
+    st.session_state.session_ready = True
+    st.rerun()
+
 # ── HK Theme ──────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
