@@ -95,7 +95,8 @@ def format_gtfs_time(t):
 # ── HK Time ───────────────────────────────────────────────────────────────────
 hk_tz = pytz.timezone("Asia/Hong_Kong")
 with st.sidebar:
-    components.html("""
+    try:
+     components.html("""
     <div style='text-align:center; padding:10px; background:#C8102E; border-radius:8px; margin:0;'>
         <div style='color:white; font-size:12px; opacity:0.8;'>🕐 Hong Kong Time</div>
         <div id='hk-clock' style='color:white; font-size:22px; font-weight:bold; font-family:monospace;'>--:--:--</div>
@@ -122,6 +123,9 @@ with st.sidebar:
         setInterval(tick, 1000);
     </script>
     """, height=90)
+    except Exception:
+        hk_now = datetime.now(hk_tz)
+        st.sidebar.markdown(f"🕐 **{hk_now.strftime('%H:%M:%S')}** HKT")
 
 
 visible_types = [0, 3, 4, 7]
