@@ -61,7 +61,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🇭🇰 香港交通脈搏 Hong Kong Transit Pulse")
+import base64 as _b64
+with open("dashboard/hk_flag.png", "rb") as _f:
+    _flag_b64 = _b64.b64encode(_f.read()).decode()
+st.markdown(f"""
+<div style='display:flex; align-items:center; gap:12px; margin-bottom:0;'>
+    <img src='data:image/png;base64,{_flag_b64}' height='44'/>
+    <span style='font-size:2.2rem; font-weight:700; line-height:1.2;'>香港交通脈搏 Hong Kong Transit Pulse</span>
+</div>
+""", unsafe_allow_html=True)
 st.markdown("Hong Kong public transport network — routes, stops, and peak hours.")
 
 @st.cache_data(ttl=3600)
