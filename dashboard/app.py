@@ -135,6 +135,12 @@ LIMIT 20
 trips_df = load_data(trips_query)
 trips_df["Route Type"] = trips_df["route_type"].map(ROUTE_TYPE_LABEL).fillna("Unknown")
 
+route_count_query = f"""
+SELECT COUNT(DISTINCT route_short_name) AS total_routes
+FROM `{PROJECT_ID}.staging.stg_routes`
+"""
+route_count_df = load_data(route_count_query)
+
 peak_query = f"""
 SELECT hour_of_day, total_trips
 FROM `{PROJECT_ID}.marts.peak_hour_analysis`
@@ -151,7 +157,7 @@ busiest_route_trips = int(trips_df.iloc[0]["total_trips"]) if not trips_df.empty
 peak_hour = int(peak_df.loc[peak_df["total_trips"].idxmax(), "hour_of_day"])
 top_stop = stops_df.sort_values("total_departures", ascending=False).iloc[0]["stop_name"]
 total_stops = len(stops_df)
-total_routes = trips_df["route_short_name"].nunique()
+total_routes = int(route_count_df.iloc[0]["total_routes"]) if not route_count_df.empty else trips_df["route_short_name"].nunique()
 
 st.info(
     f"**Network Snapshot:** HK public transport has **{total_stops:,} stops** across **{total_routes} routes**. "
@@ -162,11 +168,18 @@ st.info(
 
 
 # ── KPI row ────────────────────────────────────────────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Stops", f"{total_stops:,}")
-col2.metric("Total Routes", f"{total_routes:,}")
+mtr_net_kpi = load_csv_url(MTR_LINES_CSV)
+mtr_net_kpi.columns = [c.strip() for c in mtr_net_kpi.columns]
+mtr_lines_count = mtr_net_kpi["Line Code"].nunique() if "Line Code" in mtr_net_kpi.columns else 10
+mtr_stations_count = mtr_net_kpi["Station Code"].nunique() if "Station Code" in mtr_net_kpi.columns else 98
+
+col1, col2, col3, col4, col5, col6 = st.columns(6)
+col1.metric("GTFS Stops", f"{total_stops:,}")
+col2.metric("GTFS Routes", f"{total_routes:,}")
 col3.metric("Total Departures", f"{stops_df['total_departures'].sum():,.0f}")
 col4.metric("Peak Hour", f"{peak_hour:02d}:00")
+col5.metric("MTR Lines", mtr_lines_count)
+col6.metric("MTR Stations", mtr_stations_count)
 
 st.divider()
 
