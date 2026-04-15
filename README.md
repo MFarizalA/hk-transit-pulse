@@ -44,7 +44,6 @@ The pipeline runs daily, pulling from two open data sources — HK Transport (GT
 
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
-- [Screenshots](#screenshots)
 - [Project Structure](#project-structure)
 - [Data Sources](#data-sources)
 - [Data Pipeline](#data-pipeline)
@@ -310,25 +309,6 @@ Ten aggregated mart models power the dashboard:
 ```
 
 All datasets are in the **US** region.
-
----
-
-## Screenshots
-
-### Dashboard
-| Network Analytics | MTR Live | Streaming Analytics |
-|---|---|---|
-| ![Network Analytics](DOCS/images/streamlit_network_analytics.png) | ![MTR Live](DOCS/images/streamlit_mtr_live.png) | ![Streaming Analytics](DOCS/images/streamlit_streaming_analytics.png) |
-
-### BigQuery
-| Raw | Staging | Marts | Streaming |
-|---|---|---|---|
-| ![BQ Raw](DOCS/images/bq_raw.png) | ![BQ Staging](DOCS/images/bq_staging.png) | ![BQ Marts](DOCS/images/bq_marts.png) | ![BQ Streaming](DOCS/images/bq_streaming.png) |
-
-### Redpanda
-| Overview | Topics |
-|---|---|
-| ![Redpanda Overview](DOCS/images/redpanda_overview.png) | ![Redpanda Topics](DOCS/images/redpandas_topics.png) |
 
 ---
 
