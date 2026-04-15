@@ -1,0 +1,9 @@
+.git
+.env
+.bruin.yml
+terraform/
+logs/
+__pycache__/
+*.py[cod]
+*.zip
+sa-key.json
