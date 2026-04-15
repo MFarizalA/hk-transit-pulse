@@ -38,10 +38,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Force a rerun after session initializes to prevent pydeck SessionInfo error
-if "session_ready" not in st.session_state:
-    st.session_state.session_ready = True
-    st.rerun()
 
 # ── HK Theme ──────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -217,16 +213,19 @@ with tab_network:
     # ── Stop map ───────────────────────────────────────────────────────────────
     st.subheader("Stop Locations / 站點位置")
     st.caption(f"Showing: **{selected_label}** stops from GTFS open data.")
-    st.pydeck_chart(pdk.Deck(
-        layers=[pdk.Layer(
-            "ScatterplotLayer", data=f_stops,
-            get_position=["longitude", "latitude"], get_radius=120,
-            get_fill_color="color", pickable=True, auto_highlight=True,
-        )],
-        initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=40),
-        tooltip={"text": "{stop_name}\nDepartures: {total_departures}\nType: {Transport Type}"},
-        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    ))
+    try:
+        st.pydeck_chart(pdk.Deck(
+            layers=[pdk.Layer(
+                "ScatterplotLayer", data=f_stops,
+                get_position=["longitude", "latitude"], get_radius=120,
+                get_fill_color="color", pickable=True, auto_highlight=True,
+            )],
+            initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=40),
+            tooltip={"text": "{stop_name}\nDepartures: {total_departures}\nType: {Transport Type}"},
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        ))
+    except Exception:
+        st.info("Map unavailable — refresh the page to reload.")
 
     st.divider()
 
@@ -356,14 +355,17 @@ with tab_network:
     """)
     col_hub_map, col_hub_table = st.columns([2, 1])
     with col_hub_map:
-        st.pydeck_chart(pdk.Deck(
-            layers=[pdk.Layer("ScatterplotLayer", data=hubs_df,
-                              get_position=["longitude", "latitude"], get_radius="route_count * 15",
-                              get_fill_color=[255, 140, 0, 120], pickable=True, auto_highlight=True)],
-            initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=30),
-            tooltip={"text": "{stop_name}\nRoutes: {route_count}\nModes: {transport_modes}\n{routes_serving}"},
-            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-        ))
+        try:
+            st.pydeck_chart(pdk.Deck(
+                layers=[pdk.Layer("ScatterplotLayer", data=hubs_df,
+                                  get_position=["longitude", "latitude"], get_radius="route_count * 15",
+                                  get_fill_color=[255, 140, 0, 120], pickable=True, auto_highlight=True)],
+                initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=30),
+                tooltip={"text": "{stop_name}\nRoutes: {route_count}\nModes: {transport_modes}\n{routes_serving}"},
+                map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+            ))
+        except Exception:
+            st.info("Map unavailable — refresh the page to reload.")
     with col_hub_table:
         st.dataframe(
             hubs_df[["stop_name", "route_count", "transport_modes", "routes_serving"]].head(15)
@@ -431,14 +433,17 @@ with tab_network:
     col_us1.metric("Total Stops", len(f_stops))
     col_us2.metric("Well Served", len(well_served_stops))
     col_us3.metric("Low Service", len(underserved_stops))
-    st.pydeck_chart(pdk.Deck(
-        layers=[pdk.Layer("HeatmapLayer", data=underserved_stops,
-                          get_position=["longitude", "latitude"], get_weight="total_departures",
-                          radiusPixels=40, opacity=0.8,
-                          color_range=[[255,255,178],[254,217,118],[254,178,76],[253,141,60],[240,59,32],[189,0,38]])],
-        initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=0),
-        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    ))
+    try:
+        st.pydeck_chart(pdk.Deck(
+            layers=[pdk.Layer("HeatmapLayer", data=underserved_stops,
+                              get_position=["longitude", "latitude"], get_weight="total_departures",
+                              radiusPixels=40, opacity=0.8,
+                              color_range=[[255,255,178],[254,217,118],[254,178,76],[253,141,60],[240,59,32],[189,0,38]])],
+            initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=0),
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        ))
+    except Exception:
+        st.info("Map unavailable — refresh the page to reload.")
 
     st.divider()
 
@@ -456,14 +461,17 @@ with tab_network:
     col_zc1.metric("Total Zones", len(z_summary))
     col_zc2.metric("Well Served (3+ stops)", len(z_summary[z_summary["stop_count"] >= 3]))
     col_zc3.metric("Underserved (<3 stops)", len(z_summary[z_summary["stop_count"] < 3]))
-    st.pydeck_chart(pdk.Deck(
-        layers=[pdk.Layer("HeatmapLayer", data=z_summary,
-                          get_position=["longitude", "latitude"], get_weight="stop_count",
-                          radiusPixels=40, opacity=0.7,
-                          color_range=[[255,255,178],[254,217,118],[254,178,76],[253,141,60],[240,59,32],[189,0,38]])],
-        initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=0),
-        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    ))
+    try:
+        st.pydeck_chart(pdk.Deck(
+            layers=[pdk.Layer("HeatmapLayer", data=z_summary,
+                              get_position=["longitude", "latitude"], get_weight="stop_count",
+                              radiusPixels=40, opacity=0.7,
+                              color_range=[[255,255,178],[254,217,118],[254,178,76],[253,141,60],[240,59,32],[189,0,38]])],
+            initial_view_state=pdk.ViewState(latitude=22.35, longitude=114.15, zoom=10, pitch=0),
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        ))
+    except Exception:
+        st.info("Map unavailable — refresh the page to reload.")
 
     st.divider()
 
@@ -629,16 +637,19 @@ with tab_network:
             lr_map_df = lr_map_df.drop_duplicates(subset=[stop_id_col])
             if not lr_map_df.empty:
                 st.markdown("**Light Rail Stop Locations**")
-                st.pydeck_chart(pdk.Deck(
-                    layers=[pdk.Layer(
-                        "ScatterplotLayer", data=lr_map_df,
-                        get_position=["longitude", "latitude"], get_radius=180,
-                        get_fill_color=[255, 140, 0, 220], pickable=True, auto_highlight=True,
-                    )],
-                    initial_view_state=pdk.ViewState(latitude=22.40, longitude=113.97, zoom=11, pitch=30),
-                    tooltip={"text": "{name}"},
-                    map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-                ))
+                try:
+                    st.pydeck_chart(pdk.Deck(
+                        layers=[pdk.Layer(
+                            "ScatterplotLayer", data=lr_map_df,
+                            get_position=["longitude", "latitude"], get_radius=180,
+                            get_fill_color=[255, 140, 0, 220], pickable=True, auto_highlight=True,
+                        )],
+                        initial_view_state=pdk.ViewState(latitude=22.40, longitude=113.97, zoom=11, pitch=30),
+                        tooltip={"text": "{name}"},
+                        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+                    ))
+                except Exception:
+                    st.info("Map unavailable — refresh the page to reload.")
     except Exception as e:
         st.warning(f"Light Rail data unavailable: {e}")
 
