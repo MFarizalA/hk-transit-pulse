@@ -3,7 +3,6 @@ HK Transit Pulse — Streaming Producer
 Polls KMB bus ETA + MTR schedule APIs every 30s and publishes events to Redpanda.
 """
 import json
-import time
 import logging
 from datetime import datetime, timezone
 
@@ -110,34 +109,27 @@ def publish_events(producer: Producer, topic: str, events: list[dict]):
 
 
 def main():
-    log.info("Starting HK Transit Pulse producer...")
+    log.info("Starting HK Transit Pulse producer (one-shot)...")
     producer = make_producer()
 
-    while True:
-        poll_start = time.time()
+    # ── KMB bus ETAs ──────────────────────────────────────────────────────
+    total_bus_events = 0
+    for stop_id in KMB_STOP_IDS:
+        events = fetch_kmb_eta(stop_id)
+        publish_events(producer, TOPIC_BUS_ETA, events)
+        total_bus_events += len(events)
+    log.info("Published %d bus ETA events", total_bus_events)
 
-        # ── KMB bus ETAs ──────────────────────────────────────────────────────
-        total_bus_events = 0
-        for stop_id in KMB_STOP_IDS:
-            events = fetch_kmb_eta(stop_id)
-            publish_events(producer, TOPIC_BUS_ETA, events)
-            total_bus_events += len(events)
-        log.info("Published %d bus ETA events", total_bus_events)
+    # ── MTR schedules ─────────────────────────────────────────────────────
+    total_mtr_events = 0
+    for line, station in MTR_LINE_STATIONS:
+        events = fetch_mtr_schedule(line, station)
+        publish_events(producer, TOPIC_MTR, events)
+        total_mtr_events += len(events)
+    log.info("Published %d MTR schedule events", total_mtr_events)
 
-        # ── MTR schedules ─────────────────────────────────────────────────────
-        total_mtr_events = 0
-        for line, station in MTR_LINE_STATIONS:
-            events = fetch_mtr_schedule(line, station)
-            publish_events(producer, TOPIC_MTR, events)
-            total_mtr_events += len(events)
-        log.info("Published %d MTR schedule events", total_mtr_events)
-
-        producer.flush()
-
-        elapsed = time.time() - poll_start
-        sleep_time = max(0, POLL_INTERVAL - elapsed)
-        log.info("Poll done in %.1fs. Sleeping %.1fs...", elapsed, sleep_time)
-        time.sleep(sleep_time)
+    producer.flush()
+    log.info("Producer done. Total: %d bus + %d MTR events.", total_bus_events, total_mtr_events)
 
 
 if __name__ == "__main__":

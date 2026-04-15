@@ -4,6 +4,7 @@ Reads events from Redpanda and writes to BigQuery streaming tables.
 """
 import json
 import logging
+import time
 from datetime import datetime, timezone
 
 from confluent_kafka import Consumer, KafkaError
@@ -45,8 +46,11 @@ def insert_rows(bq_client: bigquery.Client, table: str, rows: list[dict]):
         log.info("Inserted %d rows into %s", len(rows), table)
 
 
+RUN_DURATION = 50  # seconds to drain the queue before exiting
+
+
 def main():
-    log.info("Starting HK Transit Pulse consumer...")
+    log.info("Starting HK Transit Pulse consumer (one-shot, %ds window)...", RUN_DURATION)
     consumer = make_consumer()
     bq_client = bigquery.Client(project=PROJECT_ID)
 
@@ -54,19 +58,13 @@ def main():
 
     bus_buffer: list[dict] = []
     mtr_buffer: list[dict] = []
+    deadline = time.time() + RUN_DURATION
 
     try:
-        while True:
+        while time.time() < deadline:
             msg = consumer.poll(timeout=1.0)
 
             if msg is None:
-                # Flush buffers periodically even when quiet
-                if bus_buffer:
-                    insert_rows(bq_client, BQ_TABLE_BUS, bus_buffer)
-                    bus_buffer.clear()
-                if mtr_buffer:
-                    insert_rows(bq_client, BQ_TABLE_MTR, mtr_buffer)
-                    mtr_buffer.clear()
                 continue
 
             if msg.error():
@@ -94,8 +92,6 @@ def main():
                     insert_rows(bq_client, BQ_TABLE_MTR, mtr_buffer)
                     mtr_buffer.clear()
 
-    except KeyboardInterrupt:
-        log.info("Shutting down consumer...")
     finally:
         # Flush remaining
         if bus_buffer:
@@ -103,6 +99,7 @@ def main():
         if mtr_buffer:
             insert_rows(bq_client, BQ_TABLE_MTR, mtr_buffer)
         consumer.close()
+        log.info("Consumer done. Flushed %d bus + %d MTR rows to BQ.", len(bus_buffer), len(mtr_buffer))
 
 
 if __name__ == "__main__":

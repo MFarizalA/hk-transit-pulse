@@ -56,3 +56,27 @@ jobs:
           gcloud run services describe ${{ env.SERVICE }} \
             --region ${{ env.REGION }} \
             --format="value(status.url)"
+
+      - name: Deploy producer Cloud Run Job
+        run: |
+          gcloud run jobs deploy producer-job \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --service-account bruin-pipeline@project-e5d4de8a-49cc-439d-b6e.iam.gserviceaccount.com \
+            --command python \
+            --args "streaming/producer.py" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},REDPANDA_BROKERS=${{ secrets.REDPANDA_BROKERS }},REDPANDA_USERNAME=${{ secrets.REDPANDA_USERNAME }},REDPANDA_PASSWORD=${{ secrets.REDPANDA_PASSWORD }}" \
+            --max-retries 1 \
+            --task-timeout 120
+
+      - name: Deploy consumer Cloud Run Job
+        run: |
+          gcloud run jobs deploy consumer-job \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --service-account bruin-pipeline@project-e5d4de8a-49cc-439d-b6e.iam.gserviceaccount.com \
+            --command python \
+            --args "streaming/consumer.py" \
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},REDPANDA_BROKERS=${{ secrets.REDPANDA_BROKERS }},REDPANDA_USERNAME=${{ secrets.REDPANDA_USERNAME }},REDPANDA_PASSWORD=${{ secrets.REDPANDA_PASSWORD }}" \
+            --max-retries 1 \
+            --task-timeout 120
