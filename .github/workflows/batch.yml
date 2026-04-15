@@ -1,0 +1,53 @@
+name: Daily Batch Pipeline
+
+on:
+  schedule:
+    - cron: "0 22 * * *"   # Daily at 06:00 HKT (UTC+8)
+  workflow_dispatch:        # Allow manual trigger
+
+env:
+  PROJECT_ID: project-e5d4de8a-49cc-439d-b6e
+  REGION: asia-east1
+  BATCH_IMAGE: asia-east1-docker.pkg.dev/project-e5d4de8a-49cc-439d-b6e/cloud-run-source-deploy/hk-transit-batch
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push batch image
+        run: |
+          docker build -f bruin/Dockerfile -t ${{ env.BATCH_IMAGE }}:${{ github.sha }} .
+          docker push ${{ env.BATCH_IMAGE }}:${{ github.sha }}
+
+      - name: Deploy batch Cloud Run Job
+        run: |
+          gcloud run jobs deploy batch-job \
+            --image ${{ env.BATCH_IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --service-account bruin-pipeline@project-e5d4de8a-49cc-439d-b6e.iam.gserviceaccount.com \
+            --set-env-vars GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }} \
+            --max-retries 1 \
+            --task-timeout 3600
+
+      - name: Run batch job
+        run: |
+          gcloud run jobs execute batch-job \
+            --region ${{ env.REGION }} \
+            --wait
