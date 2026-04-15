@@ -59,11 +59,12 @@ The pipeline runs daily, pulling from two open data sources — HK Transport (GT
 <img height="32" width="32" src="https://cdn.simpleicons.org/googlecloud" title="GCP"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/googlecloudstorage" title="GCS"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/googlebigquery" title="BigQuery"/>
-<img height="32" width="32" src="https://cdn.simpleicons.org/redpanda" title="Redpanda"/>
+<img height="32" width="32" src="DOCS/images/redpanda_logo.svg" title="Redpanda"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/streamlit" title="Streamlit"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/docker" title="Docker"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/githubactions" title="GitHub Actions"/>
-<img height="32" width="32" src="https://cdn.simpleicons.org/terraform" title="OpenTofu"/>
+<img height="32" width="32" src="DOCS/images/opentofu_logo.svg" title="OpenTofu"/>
+<img height="32" width="32" src="DOCS/images/bruin_logo.svg" title="Bruin"/>
 <img height="32" width="32" src="https://cdn.simpleicons.org/python" title="Python"/>
 </p>
 
