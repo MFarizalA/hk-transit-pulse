@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import pandas as pd
 import pydeck as pdk
 import plotly.express as px
@@ -95,37 +94,15 @@ def format_gtfs_time(t):
 # ── HK Time ───────────────────────────────────────────────────────────────────
 hk_tz = pytz.timezone("Asia/Hong_Kong")
 with st.sidebar:
-    try:
-     components.html("""
+    hk_now = datetime.now(hk_tz)
+    st.markdown(f"""
     <div style='text-align:center; padding:10px; background:#C8102E; border-radius:8px; margin:0;'>
         <div style='color:white; font-size:12px; opacity:0.8;'>🕐 Hong Kong Time</div>
-        <div id='hk-clock' style='color:white; font-size:22px; font-weight:bold; font-family:monospace;'>--:--:--</div>
-        <div id='hk-date' style='color:white; font-size:11px; opacity:0.8;'>---</div>
+        <div style='color:white; font-size:22px; font-weight:bold; font-family:monospace;'>{hk_now.strftime('%H:%M:%S')}</div>
+        <div style='color:white; font-size:11px; opacity:0.8;'>{hk_now.strftime('%A, %d %b %Y')}</div>
         <div style='color:#ffcccc; font-size:10px;'>UTC+8</div>
     </div>
-    <script>
-        const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        function tick() {
-            const now = new Date();
-            const hk = new Date(now.toLocaleString('en-US', {timeZone: 'Asia/Hong_Kong'}));
-            const h = String(hk.getHours()).padStart(2,'0');
-            const m = String(hk.getMinutes()).padStart(2,'0');
-            const s = String(hk.getSeconds()).padStart(2,'0');
-            const day = DAYS[hk.getDay()];
-            const date = String(hk.getDate()).padStart(2,'0');
-            const month = MONTHS[hk.getMonth()];
-            const year = hk.getFullYear();
-            document.getElementById('hk-clock').textContent = h+':'+m+':'+s;
-            document.getElementById('hk-date').textContent = day+', '+date+' '+month+' '+year;
-        }
-        tick();
-        setInterval(tick, 1000);
-    </script>
-    """, height=90)
-    except Exception:
-        hk_now = datetime.now(hk_tz)
-        st.sidebar.markdown(f"🕐 **{hk_now.strftime('%H:%M:%S')}** HKT")
+    """, unsafe_allow_html=True)
 
 
 visible_types = [0, 3, 4, 7]
