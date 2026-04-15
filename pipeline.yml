@@ -1,4 +1,0 @@
-name: hk-transit-pipeline
-schedule: "0 23 * * *"   # Daily at 06:00 WIB (UTC+7)
-default_connections:
-  google_cloud_platform: gcp
