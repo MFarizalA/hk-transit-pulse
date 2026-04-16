@@ -109,6 +109,14 @@ Chosen for rapid dashboard development in pure Python — no frontend skills req
 | ![Network Analytics](DOCS/images/streamlit_network_analytics.png) | ![MTR Live](DOCS/images/streamlit_mtr_live.png) | ![Streaming Analytics](DOCS/images/streamlit_streaming_analytics.png) |
 | Stop location maps, busiest routes, peak hour analysis, and coverage heatmaps filtered by transport type | Live MTR train schedules pulled from the real-time API with upbound/downbound breakdown and fare explorer | Real-time event volume, delay tracking, and top destinations from the Redpanda stream |
 
+**Cloud Run**
+Google Cloud's serverless container platform — no VMs to manage, scales to zero when idle. We deploy three workloads: the Streamlit dashboard as a Cloud Run **Service** (always-on, public URL), and the Bruin batch pipeline plus streaming producer/consumer as Cloud Run **Jobs** (triggered on demand by Cloud Scheduler).
+
+| Cloud Run Deployments |
+|---|
+| ![Cloud Run](DOCS/images/cloud_run.png) |
+| Dashboard service, batch-job, producer-job, and consumer-job all running on Cloud Run — serverless and within GCP free tier |
+
 **OpenTofu**
 The open-source Terraform fork used to provision all GCP infrastructure as code — GCS bucket, BigQuery datasets, service accounts, and IAM bindings. Ensures the entire infrastructure is reproducible from scratch with a single `tofu apply`.
 
