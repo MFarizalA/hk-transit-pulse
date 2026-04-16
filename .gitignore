@@ -4,6 +4,7 @@ terraform/terraform.tfvars
 terraform/.terraform/
 terraform/.terraform.lock.hcl
 DOCS/CLAUDE.md
+DOCS/MEDIUM.md
 logs/runs
 logs/*.log
 __pycache__/
