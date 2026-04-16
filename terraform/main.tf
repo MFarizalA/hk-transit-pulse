@@ -39,6 +39,12 @@ resource "google_bigquery_dataset" "marts" {
   delete_contents_on_destroy = true
 }
 
+resource "google_bigquery_dataset" "streaming" {
+  dataset_id                 = "streaming"
+  location                   = var.bq_location
+  delete_contents_on_destroy = true
+}
+
 resource "google_service_account" "bruin" {
   account_id   = "bruin-pipeline"
   display_name = "Bruin Pipeline Service Account"
@@ -60,4 +66,22 @@ resource "google_project_iam_member" "bruin_gcs" {
   project = var.project_id
   role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.bruin.email}"
+}
+
+resource "google_project_iam_member" "bruin_run_admin" {
+  project = var.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${google_service_account.bruin.email}"
+}
+
+resource "google_project_iam_member" "bruin_artifact_registry" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${google_service_account.bruin.email}"
+}
+
+resource "google_service_account_iam_member" "bruin_act_as" {
+  service_account_id = google_service_account.bruin.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.bruin.email}"
 }

@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import pydeck as pdk
@@ -30,7 +31,7 @@ def get_mtr_schedule(line, station, _refresh=0):
     except Exception as e:
         return {"status": 0, "message": str(e)}
 
-PROJECT_ID = "project-e5d4de8a-49cc-439d-b6e"
+PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
 
 st.set_page_config(
     page_title="🇭🇰 香港交通脈搏 Hong Kong Transit Pulse",

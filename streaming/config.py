@@ -10,7 +10,7 @@ TOPIC_BUS_ETA  = "hk-bus-eta"
 TOPIC_MTR      = "hk-mtr-schedule"
 
 # ── GCP ───────────────────────────────────────────────────────────────────────
-PROJECT_ID  = "project-e5d4de8a-49cc-439d-b6e"
+PROJECT_ID  = os.environ["GOOGLE_CLOUD_PROJECT"]
 BQ_DATASET  = "streaming"
 
 # ── Poll interval (seconds) ───────────────────────────────────────────────────

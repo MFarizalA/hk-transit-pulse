@@ -4,16 +4,17 @@ type: python
 @bruin"""
 
 import io
+import os
 import zipfile
 
 import requests
 from google.cloud import bigquery, storage
 
 GTFS_URL = "https://static.data.gov.hk/td/pt-headway-en/gtfs.zip"
-GCS_BUCKET = "hk-transit-pulse-raw"
-GCS_PREFIX = "gtfs_static/hk-transport"
-GCP_PROJECT = "project-e5d4de8a-49cc-439d-b6e"
-BQ_DATASET = "raw"
+GCS_BUCKET  = os.environ.get("GCS_BUCKET", "hk-transit-pulse-raw")
+GCS_PREFIX  = "gtfs_static/hk-transport"
+GCP_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
+BQ_DATASET  = "raw"
 
 # Maps filename -> BigQuery table name
 GTFS_FILES = {

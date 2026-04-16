@@ -4,14 +4,15 @@ type: python
 @bruin"""
 
 import io
+import os
 
 import requests
 import pandas as pd
 from google.cloud import bigquery, storage
 
-GCS_BUCKET  = "hk-transit-pulse-raw"
+GCS_BUCKET  = os.environ.get("GCS_BUCKET", "hk-transit-pulse-raw")
 GCS_PREFIX  = "mtr_static"
-GCP_PROJECT = "project-e5d4de8a-49cc-439d-b6e"
+GCP_PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
 BQ_DATASET  = "raw"
 
 MTR_SOURCES = {
