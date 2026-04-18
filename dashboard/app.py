@@ -63,8 +63,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 import base64 as _b64
-with open("dashboard/hk_flag.png", "rb") as _f:
-    _flag_b64 = _b64.b64encode(_f.read()).decode()
+
+@st.cache_resource
+def get_flag_b64():
+    with open("dashboard/hk_flag.png", "rb") as _f:
+        return _b64.b64encode(_f.read()).decode()
+
+_flag_b64 = get_flag_b64()
 st.markdown(f"""
 <div style='display:flex; align-items:center; gap:12px; margin-bottom:0;'>
     <img src='data:image/png;base64,{_flag_b64}' height='44'/>
@@ -73,10 +78,28 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 st.markdown("Hong Kong public transport network — routes, stops, and peak hours.")
 
+@st.cache_resource
+def get_bq_client():
+    return bigquery.Client(project=PROJECT_ID)
+
 @st.cache_data(ttl=3600)
 def load_data(query):
-    client = bigquery.Client(project=PROJECT_ID)
-    return client.query(query).to_dataframe()
+    return get_bq_client().query(query).to_dataframe()
+
+@st.cache_data(ttl=3600)
+def load_peak_by_type(project_id, route_type=None):
+    rt_sql = f"AND route_type = {route_type}" if route_type is not None else ""
+    return get_bq_client().query(f"""
+    SELECT CAST(SUBSTR(st.departure_time, 1, 2) AS INT64) AS hour_of_day,
+           COUNT(*) AS total_trips
+    FROM `{project_id}.staging.stg_stop_times` st
+    JOIN `{project_id}.staging.stg_trips` t ON st.trip_id = t.trip_id
+    JOIN `{project_id}.staging.stg_routes` r ON t.route_id = r.route_id
+    WHERE REGEXP_CONTAINS(st.departure_time, r'^\\d+:\\d{{2}}:\\d{{2}}$')
+      AND CAST(SUBSTR(st.departure_time, 1, 2) AS INT64) BETWEEN 0 AND 23
+      {rt_sql}
+    GROUP BY hour_of_day ORDER BY hour_of_day
+    """).to_dataframe()
 
 ROUTE_TYPE_LABEL = {0: "Tram", 1: "MTR", 3: "Bus", 4: "Ferry"}
 COLOR_MAP = {"Bus": "#ff3232", "Ferry": "#0078ff", "Tram": "#00c864", "MTR": "#b400ff"}
@@ -100,17 +123,10 @@ visible_types = [0, 3, 4, 7]
 
 # ── Load data ──────────────────────────────────────────────────────────────────
 stops_query = f"""
-SELECT
-    s.stop_id, s.stop_name, s.latitude, s.longitude, s.total_departures,
-    COALESCE(r.route_type, 3) AS route_type
-FROM `{PROJECT_ID}.marts.stops_ranked` s
-LEFT JOIN (
-    SELECT DISTINCT st.stop_id, r.route_type
-    FROM `{PROJECT_ID}.staging.stg_stop_times` st
-    JOIN `{PROJECT_ID}.staging.stg_trips` t ON st.trip_id = t.trip_id
-    JOIN `{PROJECT_ID}.staging.stg_routes` r ON t.route_id = r.route_id
-) r ON s.stop_id = r.stop_id
-WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
+SELECT stop_id, stop_name, latitude, longitude, total_departures,
+       COALESCE(route_type, 3) AS route_type
+FROM `{PROJECT_ID}.marts.mart_stops_ranked`
+WHERE latitude IS NOT NULL AND longitude IS NOT NULL
 """
 stops_df = load_data(stops_query)
 
@@ -275,17 +291,7 @@ with tab_network:
     with col_right:
         st.subheader("Departures by Hour of Day / 每小時出發班次")
         st.caption("Total departures per hour. Orange bands = AM peak (7-9) and PM peak (17-19).")
-        peak_filtered = load_data(f"""
-        SELECT CAST(SUBSTR(st.departure_time, 1, 2) AS INT64) AS hour_of_day,
-               COUNT(*) AS total_trips
-        FROM `{PROJECT_ID}.staging.stg_stop_times` st
-        JOIN `{PROJECT_ID}.staging.stg_trips` t ON st.trip_id = t.trip_id
-        JOIN `{PROJECT_ID}.staging.stg_routes` r ON t.route_id = r.route_id
-        WHERE REGEXP_CONTAINS(st.departure_time, r'^\\d+:\\d{{2}}:\\d{{2}}$')
-          AND CAST(SUBSTR(st.departure_time, 1, 2) AS INT64) BETWEEN 0 AND 23
-          {rt_sql}
-        GROUP BY hour_of_day ORDER BY hour_of_day
-        """) if rt_filter is not None else peak_df
+        peak_filtered = load_peak_by_type(PROJECT_ID, rt_filter) if rt_filter is not None else peak_df
         fig_peak = px.line(
             peak_filtered, x="hour_of_day", y="total_trips",
             labels={"hour_of_day": "Hour of Day", "total_trips": "Total Departures"},
