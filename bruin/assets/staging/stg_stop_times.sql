@@ -3,6 +3,9 @@ name: staging.stg_stop_times
 type: bq.sql
 materialization:
   type: table
+  cluster_by:
+    - stop_id
+    - trip_id
 depends:
   - raw.gtfs_static_hk-transport
 @bruin */

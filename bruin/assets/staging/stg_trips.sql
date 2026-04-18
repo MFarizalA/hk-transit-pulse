@@ -3,6 +3,8 @@ name: staging.stg_trips
 type: bq.sql
 materialization:
   type: table
+  cluster_by:
+    - route_id
 depends:
   - raw.gtfs_static_hk-transport
 @bruin */

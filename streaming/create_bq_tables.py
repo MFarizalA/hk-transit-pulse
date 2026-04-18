@@ -9,7 +9,7 @@ client = bigquery.Client(project=PROJECT_ID)
 
 # Create dataset
 dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{BQ_DATASET}")
-dataset_ref.location = "asia-east1"
+dataset_ref.location = "asia-east2"
 client.create_dataset(dataset_ref, exists_ok=True)
 print(f"Dataset {BQ_DATASET} ready.")
 
@@ -44,6 +44,8 @@ mtr_schema = [
     bigquery.SchemaField("timestamp",     "TIMESTAMP"),
 ]
 mtr_table = bigquery.Table(f"{PROJECT_ID}.{BQ_DATASET}.mtr_schedule_raw", schema=mtr_schema)
+mtr_table.time_partitioning = bigquery.TimePartitioning(field="timestamp")
+mtr_table.clustering_fields = ["line", "station"]
 client.create_table(mtr_table, exists_ok=True)
 print("Table mtr_schedule_raw ready.")
 
