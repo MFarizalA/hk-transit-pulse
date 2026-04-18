@@ -123,10 +123,17 @@ visible_types = [0, 3, 4, 7]
 
 # ── Load data ──────────────────────────────────────────────────────────────────
 stops_query = f"""
-SELECT stop_id, stop_name, latitude, longitude, total_departures,
-       COALESCE(route_type, 3) AS route_type
-FROM `{PROJECT_ID}.marts.mart_stops_ranked`
-WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+SELECT
+    s.stop_id, s.stop_name, s.latitude, s.longitude, s.total_departures,
+    COALESCE(r.route_type, 3) AS route_type
+FROM `{PROJECT_ID}.marts.mart_stops_ranked` s
+LEFT JOIN (
+    SELECT DISTINCT st.stop_id, r.route_type
+    FROM `{PROJECT_ID}.staging.stg_stop_times` st
+    JOIN `{PROJECT_ID}.staging.stg_trips` t ON st.trip_id = t.trip_id
+    JOIN `{PROJECT_ID}.staging.stg_routes` r ON t.route_id = r.route_id
+) r ON s.stop_id = r.stop_id
+WHERE s.latitude IS NOT NULL AND s.longitude IS NOT NULL
 """
 stops_df = load_data(stops_query)
 
