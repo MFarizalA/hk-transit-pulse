@@ -16,6 +16,14 @@ MTR_SCHEDULE_API   = "https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php"
 
 _BROWSER_UA = {"User-Agent": "Mozilla/5.0 (compatible; hk-transit-pulse/1.0)"}
 
+PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
+
+st.set_page_config(
+    page_title="🇭🇰 香港交通脈搏 Hong Kong Transit Pulse",
+    page_icon="🚌",
+    layout="wide"
+)
+
 @st.cache_data(ttl=3600)
 def load_csv_url(url):
     import io
@@ -30,14 +38,6 @@ def get_mtr_schedule(line, station, _refresh=0):
         return resp.json()
     except Exception as e:
         return {"status": 0, "message": str(e)}
-
-PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
-
-st.set_page_config(
-    page_title="🇭🇰 香港交通脈搏 Hong Kong Transit Pulse",
-    page_icon="🚌",
-    layout="wide"
-)
 
 
 # ── HK Theme ──────────────────────────────────────────────────────────────────
