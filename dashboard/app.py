@@ -815,118 +815,122 @@ with tab_streaming:
     st.subheader("Streaming Analytics 實時分析")
     st.markdown("Live MTR schedule events streamed via **Redpanda** → **BigQuery**. Producer polls every 30 seconds.")
 
-    # ── KPI row ────────────────────────────────────────────────────────────────
-    stream_counts = load_data(f"""
-    SELECT
-        COUNT(*) AS total_events,
-        COUNT(DISTINCT line) AS lines_tracked,
-        COUNT(DISTINCT station) AS stations_tracked,
-        COUNTIF(is_delayed) AS delayed_events,
-        MAX(timestamp) AS last_updated
-    FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-    """)
+    if st.button("🔄 Load / Refresh Streaming Data", type="primary"):
+        st.session_state["stream_loaded"] = True
 
-    if not stream_counts.empty:
-        r = stream_counts.iloc[0]
-        k1, k2, k3, k4 = st.columns(4)
-        k1.metric("Total Events", f"{int(r['total_events']):,}")
-        k2.metric("Lines Tracked", int(r['lines_tracked']))
-        k3.metric("Stations Tracked", int(r['stations_tracked']))
-        k4.metric("Delay Events", int(r['delayed_events']))
-        st.caption(f"Last updated: {r['last_updated']} HKT")
-
-    st.divider()
-
-    # ── Events per line ────────────────────────────────────────────────────────
-    st.subheader("Events per MTR Line")
-    st.caption("Total schedule events captured per line since streaming started. Higher = more active line.")
-    line_counts = load_data(f"""
-    SELECT line, COUNT(*) AS events, COUNTIF(is_delayed) AS delays
-    FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-    GROUP BY line ORDER BY events DESC
-    """)
-    LINE_NAMES = {
-        "AEL": "Airport Express", "TCL": "Tung Chung", "TML": "Tuen Ma",
-        "TKL": "Tseung Kwan O", "EAL": "East Rail", "SIL": "South Island",
-        "TWL": "Tsuen Wan", "ISL": "Island", "KTL": "Kwun Tong", "DRL": "Disneyland",
-    }
-    line_counts["Line Name"] = line_counts["line"].map(LINE_NAMES).fillna(line_counts["line"])
-    fig_lines = px.bar(
-        line_counts, x="Line Name", y="events", color="delays",
-        color_continuous_scale="Reds",
-        labels={"events": "Total Events", "delays": "Delay Events", "Line Name": "MTR Line"},
-    )
-    fig_lines.update_layout(coloraxis_showscale=True)
-    st.plotly_chart(fig_lines, width='stretch')
-
-    st.divider()
-
-    # ── Events over time ───────────────────────────────────────────────────────
-    st.subheader("Event Volume Over Time")
-    st.caption("Number of schedule events captured per minute. Shows polling cadence and data volume.")
-    time_series = load_data(f"""
-    SELECT
-        TIMESTAMP_TRUNC(timestamp, MINUTE) AS minute,
-        COUNT(*) AS events
-    FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-    GROUP BY minute ORDER BY minute
-    """)
-    if not time_series.empty:
-        fig_ts = px.line(
-            time_series, x="minute", y="events",
-            labels={"minute": "Time", "events": "Events per Minute"},
-            color_discrete_sequence=["#C8102E"],
-        )
-        st.plotly_chart(fig_ts, width='stretch')
-
-    st.divider()
-
-    # ── Direction split ────────────────────────────────────────────────────────
-    col_dir, col_dest = st.columns(2)
-
-    with col_dir:
-        st.subheader("UP vs DOWN Trains")
-        st.caption("Split of inbound vs outbound trains across all lines.")
-        dir_counts = load_data(f"""
-        SELECT direction, COUNT(*) AS events
+    if "stream_loaded" not in st.session_state:
+        st.info("Click **Load / Refresh Streaming Data** above to fetch live analytics.")
+    else:
+        # ── KPI row ───────────────────────────────────────────────────────────
+        stream_counts = load_data(f"""
+        SELECT
+            COUNT(*) AS total_events,
+            COUNT(DISTINCT line) AS lines_tracked,
+            COUNT(DISTINCT station) AS stations_tracked,
+            COUNTIF(is_delayed) AS delayed_events,
+            MAX(timestamp) AS last_updated
         FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-        GROUP BY direction
         """)
-        fig_dir = px.pie(
-            dir_counts, names="direction", values="events", hole=0.4,
-            color_discrete_sequence=["#C8102E", "#0078ff"],
-        )
-        fig_dir.update_traces(textposition="inside", textinfo="percent+label")
-        st.plotly_chart(fig_dir, width='stretch')
+        if not stream_counts.empty:
+            r = stream_counts.iloc[0]
+            k1, k2, k3, k4 = st.columns(4)
+            k1.metric("Total Events", f"{int(r['total_events']):,}")
+            k2.metric("Lines Tracked", int(r['lines_tracked']))
+            k3.metric("Stations Tracked", int(r['stations_tracked']))
+            k4.metric("Delay Events", int(r['delayed_events']))
+            st.caption(f"Last updated: {r['last_updated']} HKT")
 
-    with col_dest:
-        st.subheader("Top Destinations")
-        st.caption("Most frequent train destinations across all streamed events.")
-        dest_counts = load_data(f"""
-        SELECT destination, COUNT(*) AS events
+        st.divider()
+
+        # ── Events per line ───────────────────────────────────────────────────
+        st.subheader("Events per MTR Line")
+        st.caption("Total schedule events captured per line since streaming started. Higher = more active line.")
+        line_counts = load_data(f"""
+        SELECT line, COUNT(*) AS events, COUNTIF(is_delayed) AS delays
         FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-        WHERE destination IS NOT NULL
-        GROUP BY destination ORDER BY events DESC LIMIT 10
+        GROUP BY line ORDER BY events DESC
         """)
-        fig_dest = px.bar(
-            dest_counts, x="events", y="destination", orientation="h",
-            color_discrete_sequence=["#b400ff"],
-            labels={"events": "Events", "destination": "Destination"},
+        LINE_NAMES = {
+            "AEL": "Airport Express", "TCL": "Tung Chung", "TML": "Tuen Ma",
+            "TKL": "Tseung Kwan O", "EAL": "East Rail", "SIL": "South Island",
+            "TWL": "Tsuen Wan", "ISL": "Island", "KTL": "Kwun Tong", "DRL": "Disneyland",
+        }
+        line_counts["Line Name"] = line_counts["line"].map(LINE_NAMES).fillna(line_counts["line"])
+        fig_lines = px.bar(
+            line_counts, x="Line Name", y="events", color="delays",
+            color_continuous_scale="Reds",
+            labels={"events": "Total Events", "delays": "Delay Events", "Line Name": "MTR Line"},
         )
-        fig_dest.update_layout(yaxis=dict(autorange="reversed"))
-        st.plotly_chart(fig_dest, width='stretch')
+        fig_lines.update_layout(coloraxis_showscale=True)
+        st.plotly_chart(fig_lines, width='stretch')
 
-    st.divider()
+        st.divider()
 
-    # ── Raw events table ───────────────────────────────────────────────────────
-    st.subheader("Latest Events")
-    st.caption("Most recent 20 MTR schedule events from the stream.")
-    latest_events = load_data(f"""
-    SELECT timestamp, line, station, direction, destination, platform, minutes_away, is_delayed
-    FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
-    ORDER BY timestamp DESC LIMIT 20
-    """)
-    st.dataframe(latest_events, width='stretch', hide_index=True)
+        # ── Events over time ──────────────────────────────────────────────────
+        st.subheader("Event Volume Over Time")
+        st.caption("Number of schedule events captured per minute. Shows polling cadence and data volume.")
+        time_series = load_data(f"""
+        SELECT
+            TIMESTAMP_TRUNC(timestamp, MINUTE) AS minute,
+            COUNT(*) AS events
+        FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
+        GROUP BY minute ORDER BY minute
+        """)
+        if not time_series.empty:
+            fig_ts = px.line(
+                time_series, x="minute", y="events",
+                labels={"minute": "Time", "events": "Events per Minute"},
+                color_discrete_sequence=["#C8102E"],
+            )
+            st.plotly_chart(fig_ts, width='stretch')
+
+        st.divider()
+
+        # ── Direction split ───────────────────────────────────────────────────
+        col_dir, col_dest = st.columns(2)
+        with col_dir:
+            st.subheader("UP vs DOWN Trains")
+            st.caption("Split of inbound vs outbound trains across all lines.")
+            dir_counts = load_data(f"""
+            SELECT direction, COUNT(*) AS events
+            FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
+            GROUP BY direction
+            """)
+            fig_dir = px.pie(
+                dir_counts, names="direction", values="events", hole=0.4,
+                color_discrete_sequence=["#C8102E", "#0078ff"],
+            )
+            fig_dir.update_traces(textposition="inside", textinfo="percent+label")
+            st.plotly_chart(fig_dir, width='stretch')
+
+        with col_dest:
+            st.subheader("Top Destinations")
+            st.caption("Most frequent train destinations across all streamed events.")
+            dest_counts = load_data(f"""
+            SELECT destination, COUNT(*) AS events
+            FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
+            WHERE destination IS NOT NULL
+            GROUP BY destination ORDER BY events DESC LIMIT 10
+            """)
+            fig_dest = px.bar(
+                dest_counts, x="events", y="destination", orientation="h",
+                color_discrete_sequence=["#b400ff"],
+                labels={"events": "Events", "destination": "Destination"},
+            )
+            fig_dest.update_layout(yaxis=dict(autorange="reversed"))
+            st.plotly_chart(fig_dest, width='stretch')
+
+        st.divider()
+
+        # ── Raw events table ──────────────────────────────────────────────────
+        st.subheader("Latest Events")
+        st.caption("Most recent 20 MTR schedule events from the stream.")
+        latest_events = load_data(f"""
+        SELECT timestamp, line, station, direction, destination, platform, minutes_away, is_delayed
+        FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
+        ORDER BY timestamp DESC LIMIT 20
+        """)
+        st.dataframe(latest_events, width='stretch', hide_index=True)
 
 
 # TAB 5: About
