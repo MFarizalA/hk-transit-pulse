@@ -1,3 +1,7 @@
 [server]
 enableXsrfProtection = false
 enableCORS = false
+
+[browser]
+serverAddress = "hk-transit-pulse-fclvz6lara-de.a.run.app"
+serverPort = 443
