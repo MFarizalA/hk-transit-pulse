@@ -86,8 +86,32 @@ resource "google_project_iam_member" "bruin_artifact_registry" {
   member  = "serviceAccount:${google_service_account.bruin.email}"
 }
 
+resource "google_project_iam_member" "bruin_run_invoker" {
+  project = var.project_id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.bruin.email}"
+}
+
 resource "google_service_account_iam_member" "bruin_act_as" {
   service_account_id = google_service_account.bruin.name
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_service_account.bruin.email}"
+}
+
+# ── Streamlit Dashboard Service Account ───────────────────────────────────────
+resource "google_service_account" "streamlit" {
+  account_id   = "streamlit-dashboard"
+  display_name = "Streamlit Dashboard Service Account"
+}
+
+resource "google_project_iam_member" "streamlit_bq_viewer" {
+  project = var.project_id
+  role    = "roles/bigquery.dataViewer"
+  member  = "serviceAccount:${google_service_account.streamlit.email}"
+}
+
+resource "google_project_iam_member" "streamlit_bq_job" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.streamlit.email}"
 }
