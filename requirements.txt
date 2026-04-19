@@ -1,6 +1,7 @@
 requests==2.33.1
 google-cloud-storage==3.10.1
 google-cloud-bigquery==3.41.0
+google-cloud-bigquery-storage==2.27.0
 streamlit==1.45.0
 pydeck==0.9.1
 pandas==2.2.3
