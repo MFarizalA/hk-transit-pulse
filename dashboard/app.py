@@ -285,7 +285,7 @@ with tab_network:
     )
     top_stops.index += 1
     top_stops.columns = ["Stop Name", "Total Departures", "Transport Type"]
-    st.dataframe(top_stops, use_container_width=True)
+    st.dataframe(top_stops, width='stretch')
     st.download_button("⬇ Download CSV", data=top_stops.to_csv(index=False),
                        file_name="hk_busiest_stops.csv", mime="text/csv")
 
@@ -303,7 +303,7 @@ with tab_network:
             hover_data=["route_long_name"],
         )
         fig_trips.update_layout(legend_title="Transport Type")
-        st.plotly_chart(fig_trips, use_container_width=True)
+        st.plotly_chart(fig_trips, width='stretch')
 
     with col_right:
         st.subheader("Departures by Hour of Day / 每小時出發班次")
@@ -317,7 +317,7 @@ with tab_network:
         fig_peak.add_vrect(x0=7, x1=9, fillcolor="orange", opacity=0.15, annotation_text="AM Peak")
         fig_peak.add_vrect(x0=17, x1=19, fillcolor="orange", opacity=0.15, annotation_text="PM Peak")
         fig_peak.update_layout(showlegend=False)
-        st.plotly_chart(fig_peak, use_container_width=True)
+        st.plotly_chart(fig_peak, width='stretch')
 
     st.divider()
 
@@ -330,7 +330,7 @@ with tab_network:
         fig_pie = px.pie(type_summary, names="Transport Type", values="Total Trips",
                          color="Transport Type", color_discrete_map=COLOR_MAP, hole=0.4)
         fig_pie.update_traces(textposition="inside", textinfo="percent+label")
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
         st.divider()
 
     # ── Service hours ──────────────────────────────────────────────────────────
@@ -349,7 +349,7 @@ with tab_network:
         service_hours_df[["route_short_name", "first_departure", "last_departure", "total_trips", "total_stops", "Route Type"]]
         .rename(columns={"route_short_name": "Route", "first_departure": "First Service",
                          "last_departure": "Last Service", "total_trips": "Total Trips", "total_stops": "Total Stops"}),
-        use_container_width=True,
+        width='stretch',
     )
 
     st.divider()
@@ -364,7 +364,7 @@ with tab_network:
                          labels={"service_type": "Service Type", "total_trips": "Total Trips"},
                          color_discrete_sequence=["#ff3232", "#0078ff", "#00c864"])
         fig_wkd.update_layout(showlegend=False)
-        st.plotly_chart(fig_wkd, use_container_width=True)
+        st.plotly_chart(fig_wkd, width='stretch')
     with col_freq:
         freq_df = load_data(f"""
         SELECT route_short_name, hour_of_day, SUM(trips_per_hour) AS trips_per_hour
@@ -378,7 +378,7 @@ with tab_network:
         freq_pivot = freq_df.pivot(index="route_short_name", columns="hour_of_day", values="trips_per_hour").fillna(0)
         fig_freq = px.imshow(freq_pivot, labels={"x": "Hour of Day", "y": "Route", "color": "Trips"},
                              color_continuous_scale="Reds", title="Service Frequency Heatmap (Top 10 Routes)")
-        st.plotly_chart(fig_freq, use_container_width=True)
+        st.plotly_chart(fig_freq, width='stretch')
 
     st.divider()
 
@@ -408,7 +408,7 @@ with tab_network:
             hubs_df[["stop_name", "route_count", "transport_modes", "routes_serving"]].head(15)
             .rename(columns={"stop_name": "Stop", "route_count": "Routes",
                              "transport_modes": "Modes", "routes_serving": "Serving"}),
-            use_container_width=True, height=400,
+            width='stretch', height=400,
         )
 
     st.divider()
@@ -426,7 +426,7 @@ with tab_network:
                          color_discrete_map=COLOR_MAP,
                          labels={"route_short_name": "Route", "unique_stops": "Unique Stops"},
                          hover_data=["route_long_name", "total_trips"])
-    st.plotly_chart(fig_longest, use_container_width=True)
+    st.plotly_chart(fig_longest, width='stretch')
 
     st.divider()
 
@@ -448,14 +448,14 @@ with tab_network:
         st.dataframe(
             early_night_df[early_night_df["is_early_bird"] == True][["route_short_name", "first_departure", "Route Type"]]
             .rename(columns={"route_short_name": "Route", "first_departure": "First Service"}),
-            use_container_width=True, height=300,
+            width='stretch', height=300,
         )
     with col_night:
         st.markdown("**🌙 Night Owl Routes** (run past 23:00)")
         st.dataframe(
             early_night_df[early_night_df["is_night_owl"] == True][["route_short_name", "last_departure", "Route Type"]]
             .rename(columns={"route_short_name": "Route", "last_departure": "Last Service"}),
-            use_container_width=True, height=300,
+            width='stretch', height=300,
         )
 
     st.divider()
@@ -584,11 +584,11 @@ with tab_network:
             color_discrete_sequence=["#b400ff"] * len(stations_per_line),
         )
         fig_hr.update_layout(showlegend=False, xaxis_tickangle=-30)
-        st.plotly_chart(fig_hr, use_container_width=True)
+        st.plotly_chart(fig_hr, width='stretch')
     with col_hr_table:
         st.dataframe(
             stations_per_line[["Line Name", "Line Code", "Stations"]].reset_index(drop=True),
-            use_container_width=True, height=320,
+            width='stretch', height=320,
         )
 
     # Fare summary
@@ -611,7 +611,7 @@ with tab_network:
                 color_discrete_sequence=["#b400ff"] * len(fare_summary),
             )
             fig_fare.update_layout(showlegend=False, xaxis_tickangle=-30)
-            st.plotly_chart(fig_fare, use_container_width=True)
+            st.plotly_chart(fig_fare, width='stretch')
     except Exception:
         pass
 
@@ -658,11 +658,11 @@ with tab_network:
                     color_discrete_sequence=["#ff8c00"] * len(lr_stops_per_route),
                 )
                 fig_lr.update_layout(showlegend=False)
-                st.plotly_chart(fig_lr, use_container_width=True)
+                st.plotly_chart(fig_lr, width='stretch')
             with col_lr_table:
-                st.dataframe(lr_stops_per_route.reset_index(drop=True), use_container_width=True, height=320)
+                st.dataframe(lr_stops_per_route.reset_index(drop=True), width='stretch', height=320)
         else:
-            st.dataframe(lr_raw.head(30), use_container_width=True)
+            st.dataframe(lr_raw.head(30), width='stretch')
 
         # Light Rail stop map (if coordinates present)
         if lat_col and lon_col and stop_id_col:
@@ -760,7 +760,7 @@ with tab_mtr:
                 if valid_trains:
                     train_df = pd.DataFrame(valid_trains)[["seq", "dest", "plat", "time", "ttnt"]]
                     train_df.columns = ["#", "Destination", "Platform", "Arrival Time", "Min Away"]
-                    st.dataframe(train_df, use_container_width=True, hide_index=True)
+                    st.dataframe(train_df, width='stretch', hide_index=True)
                 else:
                     st.info("No trains scheduled in this direction.")
     else:
@@ -857,7 +857,7 @@ with tab_streaming:
         labels={"events": "Total Events", "delays": "Delay Events", "Line Name": "MTR Line"},
     )
     fig_lines.update_layout(coloraxis_showscale=True)
-    st.plotly_chart(fig_lines, use_container_width=True)
+    st.plotly_chart(fig_lines, width='stretch')
 
     st.divider()
 
@@ -877,7 +877,7 @@ with tab_streaming:
             labels={"minute": "Time", "events": "Events per Minute"},
             color_discrete_sequence=["#C8102E"],
         )
-        st.plotly_chart(fig_ts, use_container_width=True)
+        st.plotly_chart(fig_ts, width='stretch')
 
     st.divider()
 
@@ -897,7 +897,7 @@ with tab_streaming:
             color_discrete_sequence=["#C8102E", "#0078ff"],
         )
         fig_dir.update_traces(textposition="inside", textinfo="percent+label")
-        st.plotly_chart(fig_dir, use_container_width=True)
+        st.plotly_chart(fig_dir, width='stretch')
 
     with col_dest:
         st.subheader("Top Destinations")
@@ -914,7 +914,7 @@ with tab_streaming:
             labels={"events": "Events", "destination": "Destination"},
         )
         fig_dest.update_layout(yaxis=dict(autorange="reversed"))
-        st.plotly_chart(fig_dest, use_container_width=True)
+        st.plotly_chart(fig_dest, width='stretch')
 
     st.divider()
 
@@ -926,7 +926,7 @@ with tab_streaming:
     FROM `{PROJECT_ID}.streaming.mtr_schedule_raw`
     ORDER BY timestamp DESC LIMIT 20
     """)
-    st.dataframe(latest_events, use_container_width=True, hide_index=True)
+    st.dataframe(latest_events, width='stretch', hide_index=True)
 
 
 # TAB 5: About
