@@ -84,7 +84,7 @@ def get_bq_client():
 
 @st.cache_data(ttl=3600)
 def load_data(query):
-    return get_bq_client().query(query).to_dataframe()
+    return get_bq_client().query(query).to_dataframe(create_bqstorage_client=False)
 
 @st.cache_data(ttl=3600)
 def load_peak_by_type(project_id, route_type=None):
