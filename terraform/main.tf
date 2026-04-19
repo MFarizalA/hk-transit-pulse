@@ -68,6 +68,12 @@ resource "google_project_iam_member" "bruin_gcs" {
   member  = "serviceAccount:${google_service_account.bruin.email}"
 }
 
+resource "google_project_iam_member" "bruin_bq_read_session" {
+  project = var.project_id
+  role    = "roles/bigquery.readSessionUser"
+  member  = "serviceAccount:${google_service_account.bruin.email}"
+}
+
 resource "google_project_iam_member" "bruin_run_admin" {
   project = var.project_id
   role    = "roles/run.admin"
