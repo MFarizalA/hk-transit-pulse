@@ -121,15 +121,6 @@ hk_tz = pytz.timezone("Asia/Hong_Kong")
 visible_types = [0, 3, 4, 7]
 
 
-# ── Load data ──────────────────────────────────────────────────────────────────
-stops_query = f"""
-SELECT stop_id, stop_name, latitude, longitude, total_departures,
-       COALESCE(route_type, 3) AS route_type
-FROM `{PROJECT_ID}.marts.mart_stops_ranked`
-WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-"""
-stops_df = load_data(stops_query)
-
 def route_type_color(rt):
     return {
         0: [0, 200, 100, 220],
@@ -138,43 +129,63 @@ def route_type_color(rt):
         4: [0, 120, 255, 220],
     }.get(rt, [200, 200, 200, 180])
 
-stops_df["color"] = stops_df["route_type"].apply(route_type_color)
-stops_df["Transport Type"] = stops_df["route_type"].map(ROUTE_TYPE_LABEL).fillna("Unknown")
+# ── Single KPI query — replaces 4 separate upfront queries ────────────────────
+@st.cache_data(ttl=3600)
+def load_kpi(project_id):
+    return get_bq_client().query(f"""
+    SELECT
+        (SELECT COUNT(*) FROM `{project_id}.marts.mart_stops_ranked`
+         WHERE latitude IS NOT NULL) AS total_stops,
+        (SELECT SUM(total_departures) FROM `{project_id}.marts.mart_stops_ranked`) AS total_departures,
+        (SELECT COUNT(DISTINCT route_short_name) FROM `{project_id}.staging.stg_routes`) AS total_routes,
+        (SELECT stop_name FROM `{project_id}.marts.mart_stops_ranked`
+         ORDER BY total_departures DESC LIMIT 1) AS top_stop,
+        (SELECT route_short_name FROM `{project_id}.marts.mart_trips_per_route`
+         ORDER BY total_trips DESC LIMIT 1) AS busiest_route,
+        (SELECT total_trips FROM `{project_id}.marts.mart_trips_per_route`
+         ORDER BY total_trips DESC LIMIT 1) AS busiest_route_trips,
+        (SELECT hour_of_day FROM `{project_id}.marts.mart_peak_hour_analysis`
+         ORDER BY total_trips DESC LIMIT 1) AS peak_hour
+    """).to_dataframe()
 
-trips_query = f"""
-SELECT r.route_short_name, r.route_long_name, r.route_type, COUNT(t.trip_id) AS total_trips
-FROM `{PROJECT_ID}.staging.stg_trips` t
-JOIN `{PROJECT_ID}.staging.stg_routes` r ON t.route_id = r.route_id
-GROUP BY r.route_short_name, r.route_long_name, r.route_type
-ORDER BY total_trips DESC
-LIMIT 20
-"""
-trips_df = load_data(trips_query)
-trips_df["Route Type"] = trips_df["route_type"].map(ROUTE_TYPE_LABEL).fillna("Unknown")
+kpi = load_kpi(PROJECT_ID).iloc[0]
+total_stops         = int(kpi["total_stops"])
+total_departures    = int(kpi["total_departures"])
+total_routes        = int(kpi["total_routes"])
+top_stop            = kpi["top_stop"]
+busiest_route       = kpi["busiest_route"]
+busiest_route_trips = int(kpi["busiest_route_trips"])
+peak_hour           = int(kpi["peak_hour"])
 
-route_count_query = f"""
-SELECT COUNT(DISTINCT route_short_name) AS total_routes
-FROM `{PROJECT_ID}.staging.stg_routes`
-"""
-route_count_df = load_data(route_count_query)
+# ── Lazy-load network tab data into session_state ─────────────────────────────
+def load_network_data():
+    if "stops_df" not in st.session_state:
+        stops_df = load_data(f"""
+        SELECT stop_id, stop_name, latitude, longitude, total_departures,
+               COALESCE(route_type, 3) AS route_type
+        FROM `{PROJECT_ID}.marts.mart_stops_ranked`
+        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+        """)
+        stops_df["color"] = stops_df["route_type"].apply(route_type_color)
+        stops_df["Transport Type"] = stops_df["route_type"].map(ROUTE_TYPE_LABEL).fillna("Unknown")
+        st.session_state.stops_df = stops_df
 
-peak_query = f"""
-SELECT hour_of_day, total_trips
-FROM `{PROJECT_ID}.marts.peak_hour_analysis`
-WHERE hour_of_day BETWEEN 0 AND 23
-ORDER BY hour_of_day
-"""
-peak_df = load_data(peak_query)
+        trips_df = load_data(f"""
+        SELECT r.route_short_name, r.route_long_name, r.route_type, COUNT(t.trip_id) AS total_trips
+        FROM `{PROJECT_ID}.staging.stg_trips` t
+        JOIN `{PROJECT_ID}.staging.stg_routes` r ON t.route_id = r.route_id
+        GROUP BY r.route_short_name, r.route_long_name, r.route_type
+        ORDER BY total_trips DESC LIMIT 20
+        """)
+        trips_df["Route Type"] = trips_df["route_type"].map(ROUTE_TYPE_LABEL).fillna("Unknown")
+        st.session_state.trips_df = trips_df
 
-
-
-# ── Auto-generated summary card ────────────────────────────────────────────────
-busiest_route = trips_df.iloc[0]["route_short_name"] if not trips_df.empty else "N/A"
-busiest_route_trips = int(trips_df.iloc[0]["total_trips"]) if not trips_df.empty else 0
-peak_hour = int(peak_df.loc[peak_df["total_trips"].idxmax(), "hour_of_day"])
-top_stop = stops_df.sort_values("total_departures", ascending=False).iloc[0]["stop_name"]
-total_stops = len(stops_df)
-total_routes = int(route_count_df.iloc[0]["total_routes"]) if not route_count_df.empty else trips_df["route_short_name"].nunique()
+        st.session_state.peak_df = load_data(f"""
+        SELECT hour_of_day, total_trips
+        FROM `{PROJECT_ID}.marts.mart_peak_hour_analysis`
+        WHERE hour_of_day BETWEEN 0 AND 23
+        ORDER BY hour_of_day
+        """)
 
 st.info(
     f"**Network Snapshot:** HK public transport has **{total_stops:,} stops** across **{total_routes} routes**. "
@@ -193,7 +204,7 @@ mtr_stations_count = mtr_net_kpi["Station Code"].nunique() if "Station Code" in 
 col1, col2, col3, col4, col5, col6 = st.columns(6)
 col1.metric("GTFS Stops", f"{total_stops:,}")
 col2.metric("GTFS Routes", f"{total_routes:,}")
-col3.metric("Total Departures", f"{stops_df['total_departures'].sum():,.0f}")
+col3.metric("Total Departures", f"{total_departures:,}")
 col4.metric("Peak Hour", f"{peak_hour:02d}:00")
 col5.metric("MTR Lines", mtr_lines_count)
 col6.metric("MTR Stations", mtr_stations_count)
@@ -208,6 +219,12 @@ tab_network, tab_mtr, tab_streaming, tab_about = st.tabs(["Network Analytics", "
 # TAB 1: Network Analytics
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_network:
+
+    with st.spinner("Loading network data..."):
+        load_network_data()
+    stops_df = st.session_state.stops_df
+    trips_df = st.session_state.trips_df
+    peak_df  = st.session_state.peak_df
 
     # ── Transport type selector ────────────────────────────────────────────────
     TYPE_OPTIONS = {
