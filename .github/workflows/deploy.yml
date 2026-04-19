@@ -54,6 +54,7 @@ jobs:
             --service-account bruin-pipeline@project-e5d4de8a-49cc-439d-b6e.iam.gserviceaccount.com \
             --allow-unauthenticated \
             --min-instances=1 \
+            --max-instances=1 \
             --set-env-vars GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}
 
       - name: Show service URL

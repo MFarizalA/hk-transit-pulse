@@ -1,6 +1,10 @@
+[global]
+maxCachedMessageAge = 0
+
 [server]
 enableXsrfProtection = false
 enableCORS = false
+headless = true
 
 [browser]
 serverAddress = "hk-transit-pulse-fclvz6lara-de.a.run.app"
